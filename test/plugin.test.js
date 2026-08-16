@@ -3,7 +3,7 @@ import test from "node:test"
 
 import { HerdrAgentsPlugin } from "../src/index.js"
 
-test("exposes the Herdr-specific worker tool name", async () => {
+test("exposes only Herdr-specific worker tool names", async () => {
   const keys = [
     "HERDR_ENV",
     "HERDR_SOCKET_PATH",
@@ -25,12 +25,20 @@ test("exposes the Herdr-specific worker tool name", async () => {
     const plugin = await HerdrAgentsPlugin()
     assert.deepEqual(Object.keys(plugin.tool), [
       "spawn_herdr_worker",
+      "prompt_herdr_worker",
+      "wait_herdr_worker",
+      "close_herdr_worker",
+      "list_herdr_workers",
+    ])
+    for (const legacyName of [
+      "spawn_agent",
       "send_input",
       "wait_agent",
       "close_agent",
       "list_agents",
-    ])
-    assert.equal(plugin.tool.spawn_agent, undefined)
+    ]) {
+      assert.equal(plugin.tool[legacyName], undefined)
+    }
   } finally {
     for (const [key, value] of Object.entries(original)) {
       if (value === undefined) delete process.env[key]

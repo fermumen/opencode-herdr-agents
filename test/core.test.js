@@ -156,7 +156,7 @@ test("spawn_herdr_worker retries once when the initial prompt stalls", async () 
   assert.deepEqual(fake.calls[2].slice(-2), ["--timeout", "6000"])
 })
 
-test("wait_agent returns the first settled worker transcript", async () => {
+test("wait_herdr_worker returns the first settled worker transcript", async () => {
   const fake = fakeRunner([
     json({
       agent: {
@@ -182,7 +182,7 @@ test("wait_agent returns the first settled worker transcript", async () => {
   ])
 })
 
-test("close_agent interrupts a working agent and closes its owned tab", async () => {
+test("close_herdr_worker interrupts a working agent and closes its owned tab", async () => {
   const fake = fakeRunner([
     json({
       agent: {

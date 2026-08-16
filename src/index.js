@@ -30,7 +30,7 @@ export const HerdrAgentsPlugin = async () => {
           return JSON.stringify(await agents.spawnAgent(args, context.directory), null, 2)
         },
       }),
-      send_input: tool({
+      prompt_herdr_worker: tool({
         description:
           "Send a prompt to an existing worker. Set interrupt=true to stop its current turn before redirecting it.",
         args: {
@@ -45,7 +45,7 @@ export const HerdrAgentsPlugin = async () => {
           return JSON.stringify(await agents.sendInput(args), null, 2)
         },
       }),
-      wait_agent: tool({
+      wait_herdr_worker: tool({
         description:
           "Wait until one target worker settles or blocks, then return its recent terminal transcript. Returns an empty status on timeout.",
         args: {
@@ -65,7 +65,7 @@ export const HerdrAgentsPlugin = async () => {
           return JSON.stringify(await agents.waitAgent(args), null, 2)
         },
       }),
-      close_agent: tool({
+      close_herdr_worker: tool({
         description: "Close a worker and its Herdr tab when it is no longer needed.",
         args: {
           target: tool.schema.string().describe("Agent id returned by spawn_herdr_worker."),
@@ -74,8 +74,8 @@ export const HerdrAgentsPlugin = async () => {
           return JSON.stringify(await agents.closeAgent(args), null, 2)
         },
       }),
-      list_agents: tool({
-        description: "List live agents visible to Herdr, including their tab, pane, and lifecycle status.",
+      list_herdr_workers: tool({
+        description: "List live workers visible to Herdr, including their tab, pane, and lifecycle status.",
         args: {},
         async execute() {
           return JSON.stringify(await agents.listAgents(), null, 2)
