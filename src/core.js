@@ -3,6 +3,7 @@ import { spawn } from "node:child_process"
 
 const AGENT_NAME = /^[a-z][a-z0-9_-]{0,31}$/
 const SETTLED_STATES = new Set(["idle", "done", "blocked"])
+const PROMPT_STALL_TIMEOUT_MS = 6000
 
 export class HerdrCommandError extends Error {
   constructor(args, exitCode, stdout, stderr) {
@@ -68,6 +69,7 @@ export function createHerdrAgents({ run, env = process.env } = {}) {
 
   const readLines = integerEnv(env.HERDR_AGENTS_READ_LINES, 120, 20, 1000)
   const startTimeout = integerEnv(env.HERDR_AGENTS_START_TIMEOUT_MS, 30000, 3001, 300000)
+  const promptTimeout = Math.max(startTimeout, PROMPT_STALL_TIMEOUT_MS)
 
   async function runJson(args, options) {
     const result = await run(args, options)
@@ -130,7 +132,32 @@ export function createHerdrAgents({ run, env = process.env } = {}) {
       ]
       if (openCodeArgs.length) startArgs.push("--", ...openCodeArgs)
       await runJson(startArgs)
-      const prompted = await runJson(["agent", "prompt", args.task_name, args.message])
+      // Confirm a post-submission lifecycle change without waiting for the task to finish.
+      const promptArgs = [
+        "agent",
+        "prompt",
+        args.task_name,
+        args.message,
+        "--wait",
+        "--until",
+        "working",
+        "--until",
+        "idle",
+        "--until",
+        "done",
+        "--until",
+        "blocked",
+        "--timeout",
+        String(promptTimeout),
+      ]
+      let prompted
+      try {
+        prompted = await runJson(promptArgs)
+      } catch (error) {
+        if (!isPromptStalled(error)) throw error
+        // A fresh OpenCode pane can miss immediate input; Herdr confirms no turn started.
+        prompted = await runJson(promptArgs)
+      }
       const agent = prompted.result.agent
       return {
         agent_id: args.task_name,
@@ -248,6 +275,11 @@ function integerEnv(value, fallback, minimum, maximum) {
 function isTimeoutError(error) {
   if (!(error instanceof HerdrCommandError)) return false
   return /\btimeout\b/i.test(error.stderr) || /\btimeout\b/i.test(error.stdout)
+}
+
+function isPromptStalled(error) {
+  if (!(error instanceof HerdrCommandError)) return false
+  return /\bagent_prompt_stalled\b/.test(error.stderr) || /\bagent_prompt_stalled\b/.test(error.stdout)
 }
 
 function codexStatus(agent) {

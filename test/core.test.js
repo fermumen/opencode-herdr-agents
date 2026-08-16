@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { createHerdrAgents, pluginIsAvailable } from "../src/core.js"
+import { createHerdrAgents, HerdrCommandError, pluginIsAvailable } from "../src/core.js"
 
 function json(result) {
   return { stdout: JSON.stringify({ result }), stderr: "" }
@@ -35,7 +35,7 @@ test("registers only in a top-level Herdr pane", () => {
   assert.equal(pluginIsAvailable({}), false)
 })
 
-test("spawn_agent creates a background tab, starts OpenCode, and prompts it", async () => {
+test("spawn_agent waits for Herdr to acknowledge the initial prompt", async () => {
   const agent = {
     name: "review_auth",
     agent_status: "working",
@@ -100,8 +100,60 @@ test("spawn_agent creates a background tab, starts OpenCode, and prompts it", as
       "--variant",
       "high",
     ],
-    ["agent", "prompt", "review_auth", "Review the auth flow"],
+    [
+      "agent",
+      "prompt",
+      "review_auth",
+      "Review the auth flow",
+      "--wait",
+      "--until",
+      "working",
+      "--until",
+      "idle",
+      "--until",
+      "done",
+      "--until",
+      "blocked",
+      "--timeout",
+      "30000",
+    ],
   ])
+})
+
+test("spawn_agent retries once when the initial prompt stalls", async () => {
+  const agent = {
+    name: "review_auth",
+    agent_status: "working",
+    tab_id: "w1:t2",
+    pane_id: "w1:p2",
+  }
+  const fake = fakeRunner([
+    json({ tab: { tab_id: "w1:t2" }, root_pane: { pane_id: "w1:p2" } }),
+    json({ agent }),
+    (args) => {
+      throw new HerdrCommandError(
+        args,
+        1,
+        "",
+        JSON.stringify({ error: { code: "agent_prompt_stalled" } }),
+      )
+    },
+    json({ agent }),
+  ])
+  const agents = createHerdrAgents({
+    run: fake.run,
+    env: { HERDR_WORKSPACE_ID: "w1", HERDR_AGENTS_START_TIMEOUT_MS: "4000" },
+  })
+
+  const result = await agents.spawnAgent(
+    { task_name: "review_auth", message: "Review the auth flow" },
+    "/repo",
+  )
+
+  assert.equal(result.status, "running")
+  assert.deepEqual(fake.calls[1].slice(-2), ["--timeout", "4000"])
+  assert.deepEqual(fake.calls[2], fake.calls[3])
+  assert.deepEqual(fake.calls[2].slice(-2), ["--timeout", "6000"])
 })
 
 test("wait_agent returns the first settled worker transcript", async () => {
