@@ -6,6 +6,10 @@ Each `spawn_herdr_worker` call creates a background tab in the current Herdr wor
 
 This first release intentionally supports **OpenCode workers only**.
 
+## Demo
+
+[Watch the 34-second Herdr worker lifecycle](./assets/herdr-worker-demo.mp4): create an OpenCode worker in a background tab, send a follow-up, read its result, and close it.
+
 ## Tools
 
 | Tool | Behavior |
