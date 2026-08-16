@@ -1,8 +1,8 @@
 # opencode-herdr-agents
 
-An OpenCode plugin that gives the orchestrating agent a small, Codex-shaped worker API backed by real Herdr tabs.
+An OpenCode plugin that gives the orchestrating agent a small worker API backed by real Herdr tabs.
 
-Each `spawn_agent` call creates a background tab in the current Herdr workspace, starts a new OpenCode session there, submits the task, and returns control to the first tab. The orchestrator can then send follow-ups, wait for a result, inspect live agents, or close the worker tab.
+Each `spawn_herdr_worker` call creates a background tab in the current Herdr workspace, starts a new OpenCode session there, submits the task, and returns control to the first tab. The orchestrator can then send follow-ups, wait for a result, inspect live agents, or close the worker tab.
 
 This first release intentionally supports **OpenCode workers only**.
 
@@ -10,13 +10,13 @@ This first release intentionally supports **OpenCode workers only**.
 
 | Tool | Behavior |
 | --- | --- |
-| `spawn_agent` | Create a named background tab, start OpenCode with an optional model and variant, and submit the initial task. |
+| `spawn_herdr_worker` | Create a named background tab, start OpenCode with an optional model and variant, and submit the initial task. |
 | `send_input` | Send a follow-up prompt; optionally interrupt the active turn first. |
 | `wait_agent` | Wait for the first target to settle or block, then return its recent terminal transcript. |
 | `list_agents` | List live Herdr agents with their tab, pane, and lifecycle state. |
 | `close_agent` | Stop a worker and close the tab created for it. |
 
-The naming and result shapes deliberately track Codex's multi-agent API. A separate terminal process cannot inherit the parent OpenCode transcript, so `spawn_agent.message` must be self-contained. There is no `resume_agent` in this first pass because `close_agent` destroys the worker tab.
+The lifecycle and result shapes deliberately track Codex's multi-agent API. A separate terminal process cannot inherit the parent OpenCode transcript, so `spawn_herdr_worker.message` must be self-contained. There is no `resume_agent` in this first pass because `close_agent` destroys the worker tab.
 
 ## Requirements
 
@@ -83,7 +83,7 @@ A typical tool call is:
 
 The intended lifecycle is:
 
-1. `spawn_agent` with a complete task prompt.
+1. `spawn_herdr_worker` with a complete task prompt.
 2. Continue other work in the orchestrating tab.
 3. Call `wait_agent` with the returned `agent_id`, or use `list_agents` to poll status.
 4. Use `send_input` for a follow-up.

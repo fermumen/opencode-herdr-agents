@@ -8,7 +8,7 @@ export const HerdrAgentsPlugin = async () => {
 
   return {
     tool: {
-      spawn_agent: tool({
+      spawn_herdr_worker: tool({
         description:
           "Spawn an OpenCode worker in a named background tab in the current Herdr workspace. Use a concrete, self-contained prompt because terminal workers do not inherit this chat history.",
         args: {
@@ -34,7 +34,7 @@ export const HerdrAgentsPlugin = async () => {
         description:
           "Send a prompt to an existing worker. Set interrupt=true to stop its current turn before redirecting it.",
         args: {
-          target: tool.schema.string().describe("Agent id returned by spawn_agent."),
+          target: tool.schema.string().describe("Agent id returned by spawn_herdr_worker."),
           message: tool.schema.string().min(1).describe("Prompt to send to the worker."),
           interrupt: tool.schema
             .boolean()
@@ -68,7 +68,7 @@ export const HerdrAgentsPlugin = async () => {
       close_agent: tool({
         description: "Close a worker and its Herdr tab when it is no longer needed.",
         args: {
-          target: tool.schema.string().describe("Agent id returned by spawn_agent."),
+          target: tool.schema.string().describe("Agent id returned by spawn_herdr_worker."),
         },
         async execute(args) {
           return JSON.stringify(await agents.closeAgent(args), null, 2)

@@ -1,7 +1,7 @@
 {
   "name": "opencode-herdr-agents",
   "version": "0.1.0",
-  "description": "Codex-shaped OpenCode worker tools backed by Herdr tabs",
+  "description": "OpenCode worker tools backed by Herdr tabs",
   "type": "module",
   "license": "MIT",
   "repository": {

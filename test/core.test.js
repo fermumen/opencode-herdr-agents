@@ -35,7 +35,7 @@ test("registers only in a top-level Herdr pane", () => {
   assert.equal(pluginIsAvailable({}), false)
 })
 
-test("spawn_agent waits for Herdr to acknowledge the initial prompt", async () => {
+test("spawn_herdr_worker waits for Herdr to acknowledge the initial prompt", async () => {
   const agent = {
     name: "review_auth",
     agent_status: "working",
@@ -120,7 +120,7 @@ test("spawn_agent waits for Herdr to acknowledge the initial prompt", async () =
   ])
 })
 
-test("spawn_agent retries once when the initial prompt stalls", async () => {
+test("spawn_herdr_worker retries once when the initial prompt stalls", async () => {
   const agent = {
     name: "review_auth",
     agent_status: "working",
