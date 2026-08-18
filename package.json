@@ -16,7 +16,11 @@
     "agents",
     "orchestration"
   ],
-  "exports": "./src/index.js",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./server": "./src/index.js"
+  },
   "files": [
     "src",
     "README.md",
@@ -30,6 +34,7 @@
     "@opencode-ai/plugin": "^1.18.5"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22",
+    "opencode": ">=1.18.5"
   }
 }

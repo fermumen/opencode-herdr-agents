@@ -26,47 +26,28 @@ The lifecycle and result shapes deliberately track Codex's multi-agent API. Fres
 
 - [Herdr](https://github.com/herdrdev/herdr) 0.8.0 or newer
 - OpenCode 1.18.5 or newer with its Herdr integration installed
-- Git and Node.js 22 or newer for this source install
+- Git, used by OpenCode to fetch the public plugin repository
 
-The `herdr`, `opencode`, and `node` executables must be available on `PATH`.
+The `herdr`, `opencode`, and `git` executables must be available on `PATH`.
 
 ## Install
 
-First install Herdr's official OpenCode lifecycle integration:
+Install Herdr's official OpenCode lifecycle integration and then add this plugin globally:
 
 ```bash
 herdr integration install opencode
+opencode plugin --global github:fermumen/opencode-herdr-agents
 ```
 
-Then install this plugin globally:
-
-```bash
-git clone https://github.com/fermumen/opencode-herdr-agents.git \
-  ~/.config/opencode/opencode-herdr-agents
-
-cd ~/.config/opencode/opencode-herdr-agents
-npm install --omit=dev
-
-mkdir -p ~/.config/opencode/plugins
-ln -s "$PWD/src/index.js" ~/.config/opencode/plugins/herdr-agents.js
-```
-
-Restart OpenCode after installing. OpenCode loads files in `~/.config/opencode/plugins/` automatically.
+Restart OpenCode after installing. OpenCode records the plugin in its global config and manages the checkout and dependencies in its package cache; no manual clone, `npm install`, or symlink is needed.
 
 To update:
 
 ```bash
-cd ~/.config/opencode/opencode-herdr-agents
-git pull --ff-only
-npm install --omit=dev
+opencode plugin --global --force github:fermumen/opencode-herdr-agents
 ```
 
-To uninstall:
-
-```bash
-rm ~/.config/opencode/plugins/herdr-agents.js
-rm -rf ~/.config/opencode/opencode-herdr-agents
-```
+OpenCode does not currently provide a plugin uninstall command. To uninstall, remove `github:fermumen/opencode-herdr-agents` from the `plugin` array in the global OpenCode config (`~/.config/opencode/opencode.json` or `opencode.jsonc`), then restart OpenCode.
 
 ## Use
 
@@ -112,6 +93,7 @@ Workers start with `HERDR_AGENT_WORKER=1`, which prevents the plugin from exposi
 The lifecycle core has no OpenCode dependency, so its command construction can be tested with Node's built-in test runner:
 
 ```bash
+npm install
 npm run check
 npm test
 ```

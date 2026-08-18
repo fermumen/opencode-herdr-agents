@@ -94,3 +94,8 @@ export const HerdrAgentsPlugin = async () => {
     },
   }
 }
+
+export default {
+  id: "opencode-herdr-agents",
+  server: HerdrAgentsPlugin,
+}

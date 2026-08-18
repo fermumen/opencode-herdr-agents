@@ -1,7 +1,12 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { HerdrAgentsPlugin } from "../src/index.js"
+import HerdrAgentsPluginModule, { HerdrAgentsPlugin } from "../src/index.js"
+
+test("exports an OpenCode server plugin entrypoint", () => {
+  assert.equal(HerdrAgentsPluginModule.id, "opencode-herdr-agents")
+  assert.equal(HerdrAgentsPluginModule.server, HerdrAgentsPlugin)
+})
 
 test("exposes only Herdr-specific worker tool names", async () => {
   const keys = [
