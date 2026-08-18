@@ -93,10 +93,13 @@ export function createHerdrAgents({ run, env = process.env } = {}) {
     return result.stdout.trim()
   }
 
-  async function spawnAgent(args, directory) {
+  async function spawnAgent(args, directory, currentSessionId) {
     validateTaskName(args.task_name)
     if (!args.message?.trim()) throw new Error("message must not be empty")
     if (!env.HERDR_WORKSPACE_ID) throw new Error("HERDR_WORKSPACE_ID is unavailable")
+    if (args.fork_current_session && !currentSessionId) {
+      throw new Error("current OpenCode session id is unavailable")
+    }
 
     const created = await runJson([
       "tab",
@@ -115,6 +118,9 @@ export function createHerdrAgents({ run, env = process.env } = {}) {
     const paneId = created.result.root_pane.pane_id
 
     const openCodeArgs = []
+    if (args.fork_current_session) {
+      openCodeArgs.push("--session", currentSessionId, "--fork")
+    }
     if (args.model) openCodeArgs.push("--model", args.model)
     if (args.reasoning_effort) openCodeArgs.push("--variant", args.reasoning_effort)
 
@@ -163,6 +169,7 @@ export function createHerdrAgents({ run, env = process.env } = {}) {
         agent_id: args.task_name,
         task_name: args.task_name,
         nickname: args.task_name,
+        ...(args.fork_current_session ? { forked_from_session_id: currentSessionId } : {}),
         tab_id: tabId,
         pane_id: paneId,
         status: codexStatus(agent),

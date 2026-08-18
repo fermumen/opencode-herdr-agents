@@ -14,18 +14,18 @@ This first release intentionally supports **OpenCode workers only**.
 
 | Tool | Behavior |
 | --- | --- |
-| `spawn_herdr_worker` | Create a named background tab, start OpenCode with an optional model and variant, and submit the initial task. |
+| `spawn_herdr_worker` | Create a named background tab, start a new or forked OpenCode session with an optional model and variant, and submit the initial task. |
 | `prompt_herdr_worker` | Send a follow-up prompt; optionally interrupt the active turn first. |
 | `wait_herdr_worker` | Wait for the first target to settle or block, then return its recent terminal transcript. |
 | `list_herdr_workers` | List live Herdr workers with their tab, pane, and lifecycle state. |
 | `close_herdr_worker` | Stop a worker and close the tab created for it. |
 
-The lifecycle and result shapes deliberately track Codex's multi-agent API. A separate terminal process cannot inherit the parent OpenCode transcript, so `spawn_herdr_worker.message` must be self-contained. There is no `resume_herdr_worker` in this first pass because `close_herdr_worker` destroys the worker tab.
+The lifecycle and result shapes deliberately track Codex's multi-agent API. Fresh workers do not inherit the parent OpenCode transcript, while workers created with `fork_current_session` do. In both modes, `spawn_herdr_worker.message` should state the worker's task concretely. There is no `resume_herdr_worker` in this first pass because `close_herdr_worker` destroys the worker tab.
 
 ## Requirements
 
 - [Herdr](https://github.com/herdrdev/herdr) 0.8.0 or newer
-- OpenCode with its Herdr integration installed
+- OpenCode 1.18.5 or newer with its Herdr integration installed
 - Git and Node.js 22 or newer for this source install
 
 The `herdr`, `opencode`, and `node` executables must be available on `PATH`.
@@ -79,11 +79,14 @@ A typical tool call is:
   "task_name": "review_auth",
   "message": "Review the authentication changes in this workspace. Do not edit files. Return concrete findings with file paths and line numbers.",
   "model": "openai/gpt-5.4",
-  "reasoning_effort": "high"
+  "reasoning_effort": "high",
+  "fork_current_session": true
 }
 ```
 
 `task_name` must match `[a-z][a-z0-9_-]{0,31}`. `model` uses OpenCode's `provider/model` syntax. `reasoning_effort` is passed to OpenCode as `--variant`, so supported values depend on the selected provider and model.
+
+Set `fork_current_session` to `true` to launch the worker from a fork of the session that called the tool. The fork receives the conversation and prior tool results available at spawn time, but continues independently in the background. This can avoid repeating repository discovery and can preserve a cacheable prompt prefix. The default is `false`, which starts a fresh OpenCode session as before.
 
 The intended lifecycle is:
 

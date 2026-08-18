@@ -30,6 +30,10 @@ test("exposes only Herdr-specific worker tool names", async () => {
       "close_herdr_worker",
       "list_herdr_workers",
     ])
+    assert.equal(
+      plugin.tool.spawn_herdr_worker.args.fork_current_session.safeParse(true).success,
+      true,
+    )
     for (const legacyName of [
       "spawn_agent",
       "send_input",

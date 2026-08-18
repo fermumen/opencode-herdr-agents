@@ -10,7 +10,7 @@ export const HerdrAgentsPlugin = async () => {
     tool: {
       spawn_herdr_worker: tool({
         description:
-          "Spawn an OpenCode worker in a named background tab in the current Herdr workspace. Use a concrete, self-contained prompt because terminal workers do not inherit this chat history.",
+          "Spawn an OpenCode worker in a named background tab in the current Herdr workspace. Fresh workers do not inherit this chat history; forked workers inherit it but still need a concrete task prompt.",
         args: {
           task_name: tool.schema
             .string()
@@ -25,9 +25,19 @@ export const HerdrAgentsPlugin = async () => {
             .string()
             .optional()
             .describe("Optional OpenCode model variant, such as low, medium, high, or max."),
+          fork_current_session: tool.schema
+            .boolean()
+            .optional()
+            .describe(
+              "Fork the current OpenCode session for this worker so it inherits the conversation and tool results. Defaults to false.",
+            ),
         },
         async execute(args, context) {
-          return JSON.stringify(await agents.spawnAgent(args, context.directory), null, 2)
+          return JSON.stringify(
+            await agents.spawnAgent(args, context.directory, context.sessionID),
+            null,
+            2,
+          )
         },
       }),
       prompt_herdr_worker: tool({

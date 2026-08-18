@@ -156,6 +156,72 @@ test("spawn_herdr_worker retries once when the initial prompt stalls", async () 
   assert.deepEqual(fake.calls[2].slice(-2), ["--timeout", "6000"])
 })
 
+test("spawn_herdr_worker can fork the current OpenCode session", async () => {
+  const agent = {
+    name: "review_auth",
+    agent_status: "working",
+    tab_id: "w1:t2",
+    pane_id: "w1:p2",
+  }
+  const fake = fakeRunner([
+    json({ tab: { tab_id: "w1:t2" }, root_pane: { pane_id: "w1:p2" } }),
+    json({ agent }),
+    json({ agent }),
+  ])
+  const agents = createHerdrAgents({
+    run: fake.run,
+    env: { HERDR_WORKSPACE_ID: "w1" },
+  })
+
+  const result = await agents.spawnAgent(
+    {
+      task_name: "review_auth",
+      message: "Review the auth flow",
+      fork_current_session: true,
+    },
+    "/repo",
+    "ses_parent",
+  )
+
+  assert.equal(result.forked_from_session_id, "ses_parent")
+  assert.deepEqual(fake.calls[1], [
+    "agent",
+    "start",
+    "review_auth",
+    "--kind",
+    "opencode",
+    "--pane",
+    "w1:p2",
+    "--timeout",
+    "30000",
+    "--",
+    "--session",
+    "ses_parent",
+    "--fork",
+  ])
+})
+
+test("spawn_herdr_worker validates the current session before creating a forked worker tab", async () => {
+  const fake = fakeRunner([])
+  const agents = createHerdrAgents({
+    run: fake.run,
+    env: { HERDR_WORKSPACE_ID: "w1" },
+  })
+
+  await assert.rejects(
+    agents.spawnAgent(
+      {
+        task_name: "review_auth",
+        message: "Review the auth flow",
+        fork_current_session: true,
+      },
+      "/repo",
+    ),
+    /current OpenCode session id is unavailable/,
+  )
+  assert.deepEqual(fake.calls, [])
+})
+
 test("wait_herdr_worker returns the first settled worker transcript", async () => {
   const fake = fakeRunner([
     json({
